@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginDto, RegisterDto } from './auth.dto';
+import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class AuthService {
@@ -10,7 +11,7 @@ export class AuthService {
         const realUser = await this.prisma.user.findUnique({
             where: {email: user.email}
         })
-        if(realUser && realUser.password == user.password){
+        if(realUser && await bcrypt.compare(user.password, realUser.password)){
             return realUser
         }
         return {status: 409, message: "Неверный email или пароль"}
@@ -34,9 +35,10 @@ export class AuthService {
         if(password != repassword){
             throw new BadRequestException('Пароли не совпадают')
         }
+        const hashedPassword = await bcrypt.hash(password, 10)
         return this.prisma.user.create({
             data: {
-                fullName, email, phoneNumber, dateOfBirth, password
+                fullName, email, phoneNumber, dateOfBirth, password: hashedPassword
             }
         })
     }
