@@ -2,17 +2,23 @@ import { BadRequestException, ConflictException, Injectable } from '@nestjs/comm
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginDto, RegisterDto } from './auth.dto';
 import * as bcrypt from 'bcrypt'
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
-    constructor(private readonly prisma: PrismaService){}
+    constructor(private readonly prisma: PrismaService,
+        private readonly jwtService: JwtService
+    ){}
 
     async login(user: LoginDto){
         const realUser = await this.prisma.user.findUnique({
             where: {email: user.email}
         })
         if(realUser && await bcrypt.compare(user.password, realUser.password)){
-            return realUser
+            const payload = {sub: realUser.id, email: realUser.email}
+            return {
+                access_token: await this.jwtService.signAsync(payload)
+            }
         }
         return {status: 409, message: "Неверный email или пароль"}
     }
