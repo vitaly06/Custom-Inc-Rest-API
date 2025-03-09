@@ -17,3 +17,20 @@ model User{
   address String?
   password String
 }
+
+model Category{
+  id Int @id @default(autoincrement())
+  categoryName String
+  options Json?
+  products Product[]
+}
+
+model Product{
+  id Int @id @default(autoincrement())
+  name String
+  price Float
+  categoryId Int
+  imageUrl String
+  attributes Json?
+  category Category @relation(fields: [categoryId], references: [id])
+}

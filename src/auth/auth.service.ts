@@ -20,7 +20,7 @@ export class AuthService {
                 access_token: await this.jwtService.signAsync(payload)
             }
         }
-        return {status: 409, message: "Неверный email или пароль"}
+        throw new BadRequestException('Неверный email или пароль')
     }
 
     async register(user: RegisterDto){
